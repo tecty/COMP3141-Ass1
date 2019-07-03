@@ -21,13 +21,45 @@ andThen (Turn r i1)      i2    = Turn      r  $ andThen i1 i2
 andThen (Stop)           i2    = i2
 
 loop :: Int -> Instructions -> Instructions
-loop n i = error "'loop' unimplemented"
+loop n i 
+    | n <=  0 || i == Stop = Stop
+    | otherwise            = andThen i ( loop (n - 1) i )
+
+    
+-- style    = Solid 1
+-- colour   = white
 
 invisibly :: Instructions -> Instructions
-invisibly i = error "'invisibly' unimplemented"
+invisibly i = PenUp (noPenDown True i)
+    where 
+        noPenDown :: Bool -> Instructions -> Instructions 
+        noPenDown b (SetStyle l i1)  = SetStyle  l    $ noPenDown b     i1
+        noPenDown b (SetColour c i1) = SetColour c    $ noPenDown b     i1
+        noPenDown b (Move m i1)      = Move      m    $ noPenDown b     i1
+        noPenDown b (Turn r i1)      = Turn      (360-r)    $ noPenDown b     i1
+        noPenDown b (PenDown i1)     =                  noPenDown True  i1
+        noPenDown b (PenUp i1)       =                  noPenDown False i1
+        noPenDown True Stop        =  PenDown Stop
+        noPenDown False Stop       =  Stop
+
+
+
+doRetrace :: Colour -> LineStyle -> Bool -> Instructions -> Instructions -> Instructions 
+doRetrace c l b (SetStyle nl i1)  i2   = doRetrace c  nl b     i1  (SetStyle  l i2)
+doRetrace c l b (SetColour nc i1) i2   = doRetrace nc l  b     i1  (SetColour c i2)
+doRetrace c l b (Move m i1)       i2   = doRetrace c  l  b     i1  (Move      (-m) i2)
+doRetrace c l b (Turn r i1)       i2   = doRetrace c  l  b     i1  (Turn      (360-r) i2)
+doRetrace c l True  (PenUp i1)    i2   = doRetrace c  l  False i1  (PenDown     i2)
+doRetrace c l False (PenUp i1)    i2   = doRetrace c  l  False i1  (PenUp     i2)
+doRetrace c l True  (PenDown i1)  i2   = doRetrace c  l  True  i1  (PenDown       i2)
+doRetrace c l False (PenDown i1)  i2   = doRetrace c  l  True  i1  (PenUp       i2)
+doRetrace c l True  Stop i = PenDown i
+doRetrace c l False Stop i = PenUp i
+
 
 retrace :: Instructions -> Instructions
-retrace i = error "'retrace' unimplemented"
+retrace Stop = Stop
+retrace i = doRetrace white (Solid 1) True i Stop 
 
 overlay :: [Instructions] -> Instructions
 overlay is = error "'overlay' unimplemented"

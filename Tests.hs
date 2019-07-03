@@ -32,7 +32,7 @@ prop_invisibly_sems i =
 
     tortoise (invisibly i) start == ([], finalState i)
 
-prop_retrace_sems i = 
+prop_retrace_sems  i = 
 
     tortoise (retrace i) (finalState i) == (reverse (tortoisePic i), start)
 
