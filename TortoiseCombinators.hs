@@ -60,9 +60,8 @@ retrace i = doRetrace white (Solid 1) True i Stop
         doRetrace c l True  Stop i = PenDown i
         doRetrace c l False Stop i = PenUp   i
 
-drawAndBackToOrigin :: Instructions -> Instructions 
-drawAndBackToOrigin i = andThen i $ (invisibly . retrace) i
-
-
 overlay :: [Instructions] -> Instructions
-overlay is = foldr (\x y-> andThen (drawAndBackToOrigin x) y) Stop is
+overlay  = foldr (andThen.drawAndBackToOrigin) Stop 
+    where 
+        drawAndBackToOrigin :: Instructions -> Instructions 
+        drawAndBackToOrigin i = andThen i $ (invisibly . retrace) i
